@@ -1,11 +1,21 @@
-#include "blink.h"
 #include "radio.h"
+
+#ifndef BLINK
+#define BLINK
+
+#include "blink.h"
+
+#endif
+
+#ifndef RADIO
+#define RADIO
+
 #include <stdint.h>
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
 
-
+#endif
 
 
 
