@@ -1,17 +1,23 @@
 #ifndef BLINK
 #define BLINK
 
-#include "blink.h"
+#include "blinker.h"
 
 #endif
 
 #ifndef RADIO
 #define RADIO
 
-#include <stdint.h>
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+
+#endif
+
+#ifndef STDINT
+#define STDINT
+
+#include <stdint.h>
 
 #endif
 
@@ -20,7 +26,7 @@
 typedef struct radioPayload
 {
     /* data */
-    States  state = {DISENGAGED};
+    States  state = {States::DISENGAGED};
     uint8_t request = {HIGH};
 } RadioPayload;
 
