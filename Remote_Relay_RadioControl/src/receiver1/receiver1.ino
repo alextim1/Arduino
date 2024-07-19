@@ -1,124 +1,93 @@
-#include "radio.h"
-
-#ifndef BLINK
-#define BLINK
-
-#include "blink.h"
-
-#endif
+#include "Powerhandler.h"
 
 #ifndef RADIO
 #define RADIO
 
-#include <stdint.h>
-#include <SPI.h>
-#include <nRF24L01.h>
-#include <RF24.h>
+#include "radio.h"
 
 #endif
 
+States execState = States::DISENGAGED;
 
-
-States execState = DISENGAGED;
-
-uint8_t switchRequest = LOW;
+RadioPayload switchRequest;
 
 RF24 radio(ce, csn); // CE, CSN
 
+Powerhandler powerhandler;
 
+RadioPayload payload = {state{States::DISENGAGED}};
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-  pinMode(ledPin, OUTPUT);
+  // initialize digital pin as an output.
+  
+  pinMode(Powerhandler::POWER_LOGIC_PIN, OUTPUT);
 
-  pinMode(signalPin, OUTPUT);
+  digitalWrite(Powerhandler::POWER_LOGIC_PIN, HIGH);
 
-  pinMode(powerPin, OUTPUT);
+  Serial.begin(115200); 
+  radio.begin(); 
+  //Append ACK packet from the receiving radio back to the transmitting radio 
+  radio.setAutoAck(false); //(true|false) 
+  //Set the transmission datarate 
+  radio.setDataRate(RF24_1MBPS); //(RF24_250KBPS|RF24_1MBPS|RF24_2MBPS) 
+  //Greater level = more consumption = longer distance 
+  radio.setPALevel(RF24_PA_MAX); //(RF24_PA_MIN|RF24_PA_LOW|RF24_PA_HIGH|RF24_PA_MAX) 
+  //Default value is the maximum 32 bytes 
+  radio.setPayloadSize(sizeof(payload)); 
 
-  // pinMode(buttonPin, INPUT_PULLUP);
+  radio.openWritingPipe(addresses[1]); // 00002
+  radio.openReadingPipe(1, addresses[0]); // 00001
+  radio.stopListening(); 
 
-  digitalWrite(signalPin, HIGH);   // turn the LED on (HIGH is the voltage level)
-  digitalWrite(powerPin, HIGH);
-
-  radio.begin();
-  radio.openWritingPipe(addresses[1]); // 000002
-  radio.openReadingPipe(1, addresses[0]); // 000001
-  radio.setPALevel(RF24_PA_MIN);
-
-  Serial.begin(9600);
+  powerhandler.PowerOFF();
 }
 
 
 
 
 // the loop function runs over and over again forever
-void loop() {
-
-  
-
+void loop() 
+{
   delay(5);
 
   radio.stopListening();
   
   // Propagation Broadcast execState
-  bool ok = radio.write(&execState, sizeof(execState));
+  bool ok = radio.write(&payload, sizeof(payload));
 
-  if (ok){
-    Serial.println(execState);
+  if (ok)
+  {
+    Serial.println(payload.state);
   }
 
   delay(5);
   radio.startListening();
 
-  if (radio.available()){
-    while (radio.available()){
-  
+  if (radio.available())
+  {
+    // Reset request before reading to be shure reading is performed
+    switchRequest.request = LOW;
+
+    while (radio.available())
+    {  
       radio.read(&switchRequest, sizeof(switchRequest));
     }
 
-    if (switchRequest == HIGH) {
-    
-      ChangeStateCyclically(&execState);
+    if (switchRequest.request == HIGH) 
+    {    
+      powerhandler.ChangeStateCyclically(&execState);
     } 
 
   }
 
-  if (execState == ENGAGED){
-    
-    StableSignalPowerON();
-    
-    PowerON();
-    
-  }else{
-    StableSignalPowerOFF();
-    BlinkSignalPowerOFF(); 
-    PowerOFF();
+  if (execState == States::ENGAGED)
+  {    
+    powerhandler.PowerON();    
+  } 
+  else
+  {
+    powerhandler.PowerOFF();
   }
   
-}
-
-//*********************** Definition Section***********************************************
-void ChangeStateCyclically(States* pState){
-  *pState = (*pState + 0x01)&mask;
-
-}
-
-void BlinkSignalPowerOFF(){
-  digitalWrite(ledPin, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(100);                       // wait for a second
-  digitalWrite(ledPin, LOW);    // turn the LED off by making the voltage LOW
-  delay(100);
-}
-void StableSignalPowerON(){
-  digitalWrite(signalPin, HIGH);   // turn the LED on (HIGH is the voltage level)
-}
-void StableSignalPowerOFF(){
-  digitalWrite(signalPin, LOW);   // turn off the LED on 
-}
-void PowerON(){
-  digitalWrite(powerPin, LOW);
-}
-void PowerOFF(){
-  digitalWrite(powerPin, HIGH);
 }

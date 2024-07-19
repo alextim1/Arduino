@@ -23,12 +23,12 @@
 
 //----------- Types & Enums --------------
 
-typedef struct radioPayload
+struct RadioPayload
 {
     /* data */
     States  state = {States::DISENGAGED};
     uint8_t request = {HIGH};
-} RadioPayload;
+};
 
 
 //------------ radio constatnts ------------

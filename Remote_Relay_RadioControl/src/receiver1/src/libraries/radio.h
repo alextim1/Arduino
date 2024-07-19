@@ -1,28 +1,21 @@
-#ifndef BLINK
-#define BLINK
-
-#include "blink.h"
-
-#endif
+#include "states.h"
 
 #ifndef RADIO
 #define RADIO
 
-#include <stdint.h>
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
 
 #endif
 
-//----------- Types & Enums --------------
 
-typedef struct radioPayload
+struct RadioPayload
 {
     /* data */
-    States  state = {DISENGAGED};
+    States  state = {States::DISENGAGED};
     uint8_t request = {HIGH};
-} RadioPayload;
+};
 
 
 //------------ radio constatnts ------------

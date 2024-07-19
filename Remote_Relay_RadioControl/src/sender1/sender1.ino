@@ -60,7 +60,7 @@ void setup() {
   radio.openReadingPipe(1, addresses[1]); // 00002
   radio.stopListening(); 
 
-  PermanentToBlink();
+  blinker.PermanentToBlink();
 }
 
 void loop() {
@@ -87,7 +87,7 @@ void loop() {
   execState = payload.state;  
   Serial.println(execState); 
 
-  if (execState == ENGAGED){
+  if (execState == States::ENGAGED){
     blinker.BlinkToPermanent();    
   }else{
     blinker.PermanentToBlink();
